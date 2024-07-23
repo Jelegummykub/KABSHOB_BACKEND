@@ -12,3 +12,31 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
+
+model users {
+  id            Int       @id @default(autoincrement())
+  name          String
+  surname       String
+  email         String    @unique
+  password      String
+  tel           String
+  idline        String
+  address      String
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  deleted_at    DateTime?
+  
+}
+
+model store_item {
+  id          Int                 @id @default(autoincrement())
+  name        String
+  discription String
+  price       Int
+  logo_url    String?
+  amount      Int
+  created_at  DateTime            @default(now())
+  updated_at  DateTime            @updatedAt
+}
+
+
