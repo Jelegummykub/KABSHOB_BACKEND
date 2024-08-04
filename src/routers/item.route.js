@@ -10,7 +10,9 @@ router.post('/:store_id', isLogin(),
     body('name').notEmpty().withMessage("กรุณากรอกชื่อสินค้า"),
     body('discription').notEmpty().withMessage("กรุณากรอกคำอธิบายสินค้า"),
     body('price').notEmpty().withMessage("กรุณากรอกราคา"),
-    body('amount').notEmpty().withMessage("กรุณากรอกจำนวน"), async (req, res) => {
+    body('image').notEmpty().withMessage("กรุณากรอกรูปภาพ"),
+    body('isActive').notEmpty().withMessage("sdffsf"),
+    async (req, res) => {
         const errorsValidation = validationResult(req).formatWith(({ msg }) => msg);
         if (!errorsValidation.isEmpty()) {
             return res.status(400).json({
@@ -19,8 +21,8 @@ router.post('/:store_id', isLogin(),
                 msg: errorsValidation.array()[0]
             })
         }
-        const { store_id } = req.params
-        const { name, discription, price, amount } = req.body
+        const { Storeitem } = req.params
+        const { name, discription, price , image , isActive} = req.body
         // const isCheck = await prisma.store_item.findFirst({
         //     where: {
         //         id: parseInt(store_id)
@@ -33,12 +35,13 @@ router.post('/:store_id', isLogin(),
         //         msg: "ไม่พบข้อมูลร้านนี้ในฐานข้อมูล"
         //     })
         // }
-        await prisma.store_item.create({
+        await prisma.Storeitem.create({
             data: {
                 name,
                 discription,
                 price : parseInt(price),
-                amount : parseInt(amount),
+                image,
+                isActive : Boolean(isActive)
             }
         })
         return res.status(200).json({
@@ -53,7 +56,9 @@ router.put('/:store_id/:id', isLogin(),
     body('name').notEmpty().withMessage("กรุณากรอกชื่อสินค้า"),
     body('discription').notEmpty().withMessage("กรุณากรอกคำอธิบายสินค้า"),
     body('price').notEmpty().withMessage("กรุณากรอกราคา"),
-    body('amount').notEmpty().withMessage("กรุณากรอกจำนวน"), async (req, res) => {
+    body('image').notEmpty().withMessage("กรุณากรอกรูปภาพ"),
+    body('isActive').notEmpty().withMessage("sdffsf"),
+    async (req, res) => {
         const errorsValidation = validationResult(req).formatWith(({ msg }) => msg);
         if (!errorsValidation.isEmpty()) {
             return res.status(400).json({
@@ -62,17 +67,37 @@ router.put('/:store_id/:id', isLogin(),
                 msg: errorsValidation.array()[0]
             })
         }
-        const item_id = req.params.id
-        const { name, discription, price, amount } = req.body
-        await prisma.store_item.update({
+        const id = req.params.id;
+        if (isNaN(id)){
+            return res.status(400).json({
+                result: false,
+                status: "error",
+                msg: "กรุณากรอกเป็นตัวเลข"
+            })
+        }
+        const isCheck = await prisma.Storeitem.findFirst({
             where: {
-                id: parseInt(item_id)
+                id: parseInt(id)
+            }
+        })
+        if (!isCheck) {
+            return res.status(400).json({
+                result: false,
+                status: "error",
+                msg: "ไม่พบข้อมูลร้านนี้ในฐานข้อมูล"
+            })
+        }
+        const { name, discription, price , image , isActive } = req.body
+        await prisma.Storeitem.update({
+            where: {
+                id: parseInt(id)
             },
             data: {
                 name,
                 discription,
                 price : parseInt(price),
-                amount : parseInt(amount),
+                image,
+                isActive : Boolean(isActive)
             }
         })
         return res.status(200).json({
@@ -94,7 +119,7 @@ router.delete('/:item_id/:id', isLogin(), async (req, res) => {
         })
     }
     const parsedItemId = parseInt(item_id);
-    const isCheck_item = await prisma.store_item.findFirst({
+    const isCheck_item = await prisma.Storeitem.findFirst({
         where: {
             id: parsedItemId,
         }
@@ -107,9 +132,12 @@ router.delete('/:item_id/:id', isLogin(), async (req, res) => {
             msg: "ไม่พบข้อมูลสินค้า"
         })
     }
-    await prisma.store_item.delete({
+    await prisma.Storeitem.update({
         where: {
             id: parsedItemId
+        },
+        data: {
+            deleted_at: new Date()
         }
     })
     return res.status(200).json({
@@ -130,7 +158,7 @@ router.get('/:store_id', isLogin(), async (req, res) => {
         })
     }
     
-    const item = await prisma.store_item.findMany({
+    const item = await prisma.Storeitem.findMany({
        
     })
     return res.status(200).json({
@@ -151,7 +179,7 @@ router.get('/:item_id/:id', isLogin(), async (req, res) => {
         })
     }
     const parsedItemId = parseInt(item_id);
-    const item = await prisma.store_item.findFirst({
+    const item = await prisma.Storeitem.findFirst({
         where: {
             id: parsedItemId,
         }

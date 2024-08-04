@@ -14,29 +14,76 @@ datasource db {
 }
 
 model users {
-  id            Int       @id @default(autoincrement())
-  name          String
-  surname       String
-  email         String    @unique
-  password      String
-  tel           String
-  idline        String
-  address      String
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-  deleted_at    DateTime?
-  
+  id         Int       @id @default(autoincrement())
+  name       String
+  surname    String
+  email      String    @unique
+  password   String
+  tel        String
+  idline     String?
+  address    String
+  role       Role      @default(USER)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime?
+  bill       bill[]
+  cart       Cart[]
 }
 
-model store_item {
-  id          Int                 @id @default(autoincrement())
+model Storeitem {
+  id          Int       @id @default(autoincrement())
   name        String
   discription String
   price       Int
-  logo_url    String?
-  amount      Int
-  created_at  DateTime            @default(now())
-  updated_at  DateTime            @updatedAt
+  image       String?
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+  deleted_at  DateTime?
+  stock       stock[]
+  cart        Cart[]
+  isActive Boolean
 }
 
+model bill {
+  id         Int        @id @default(autoincrement())
+  user       users      @relation(fields: [users_id], references: [id])
+  users_id   Int
+  stock      stock[]
+  totalprice Float
+  itemdetail Json
+  status     Billstatus
+  created_at DateTime   @default(now())
+  updated_at DateTime   @updatedAt
+}
 
+model stock {
+  id          Int       @id @default(autoincrement())
+  billuser    bill      @relation(fields: [billId], references: [id])
+  billId      Int
+  storeitem   Storeitem @relation(fields: [storeItemId], references: [id])
+  storeItemId Int
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+}
+
+model Cart {
+  id          Int       @id @default(autoincrement())
+  user        users     @relation(fields: [users_id], references: [id])
+  users_id    Int
+  storeitem   Storeitem @relation(fields: [storeItemId], references: [id])
+  storeItemId Int
+  quantity    Int
+  created_at  DateTime  @default(now())
+  updated_at  DateTime  @updatedAt
+}
+
+enum Billstatus {
+  WAITING
+  SUCCESS
+  FAILED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
