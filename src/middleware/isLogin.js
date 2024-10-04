@@ -17,7 +17,7 @@ const isLogin = () => async(req,res,next) => {
         status : "error",
         msg : `เกิดข้อผิดพลาด`,
     })
-    jwt.verify(authtoken,process.env.JWT_SECERT , async function(err , decode){
+    jwt.verify(authtoken,process.env.JWT_SECRET , async function(err , decode){
         if(err != null || decode.exp > new Date().getTime()){
             return res.status(400).json({
                 result : false,
@@ -26,8 +26,12 @@ const isLogin = () => async(req,res,next) => {
             })
         }
         req.users = decode
+        // console.log("Decoded user:", decode)
     })
         return next();
 }
+
+
+
 
 module.exports = isLogin;

@@ -22,7 +22,7 @@ model users {
   tel        String
   idline     String?
   address    String
-  role       Role      @default(USER)
+  role       Role      @default(ADMIN)
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   deleted_at DateTime?
@@ -36,13 +36,23 @@ model Storeitem {
   discription String
   price       Int
   image       String?
+  amount      Int
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
   deleted_at  DateTime?
   stock       stock[]
   cart        Cart[]
-  isActive Boolean
+  isActive    Boolean
+  cagetory_id  Int       // Reference to Cagetoy
+  cagetory     Cagetory   @relation(fields: [cagetory_id], references: [id]) // Establish relation to Cagetoy
 }
+
+model Cagetory {
+  id          Int         @id @default(autoincrement())
+  name        String
+  items       Storeitem[] // Reference to Storeitem
+}
+
 
 model bill {
   id         Int        @id @default(autoincrement())
