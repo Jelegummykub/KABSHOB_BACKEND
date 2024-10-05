@@ -6,10 +6,9 @@ const isLogin = require('../middleware/isLogin');
 const router = express.Router();
 
 // Create bill
-router.post('/:bill', isLogin(),
-    body('totalprice').notEmpty().withMessage("กรุณากรอกราคา").isFloat().withMessage("กรุณากรอกราคาที่ถูกต้อง"),
-    body('itemdetail').isJSON().withMessage("กรุณากรอกรายละเอียดสินค้าเป็น JSON"),
-    body('status').notEmpty().withMessage("กรุณากรอกสถานะ").isIn(['pending', 'completed']).withMessage("สถานะไม่ถูกต้อง"),
+router.post('/', isLogin(),
+    body('status').notEmpty().withMessage("กรุณากรอกสถานะ").isIn(['WAITING', 'SUCCESS', 'FAILED']).withMessage("สถานะไม่ถูกต้อง"),
+    body('totalprice').isFloat().withMessage("กรุณากรอกจำนวนเงินทั้งหมดให้ถูกต้อง"),
     async (req, res) => {
         const result = validationResult(req).formatWith(({ msg }) => msg);
         if (!result.isEmpty()) {
@@ -20,24 +19,63 @@ router.post('/:bill', isLogin(),
             });
         }
 
-        const { bill } = req.params;
-        const { totalprice, itemdetail, status } = req.body;
+        const { status, totalprice } = req.body; // รับ totalprice จาก body
+        let calculatedTotalPrice = 0;
 
         try {
-            const parsedItemDetail = JSON.parse(itemdetail);  // Parse itemdetail to a valid JSON object/array
+            const cartItems = await prisma.cart.findMany({
+                where: {
+                    userId: req.users.id,
+                },
+                include: {
+                    storeitem: true,
+                },
+            });
 
+            for (const item of cartItems) {
+                const storeItem = await prisma.storeitem.findUnique({
+                    where: {
+                        id: item.storeItemId
+                    }
+                });
+
+                if (!storeItem || storeItem.amount < item.quantity) {
+                    return res.status(400).json({
+                        result: false,
+                        status: "error",
+                        msg: `จำนวนสินค้าที่เลือก (${storeItem?.name || 'สินค้าไม่พบ'}) มีไม่เพียงพอในสต็อก`
+                    });
+                }
+
+                calculatedTotalPrice += storeItem.price * item.quantity; // คำนวณราคาสุทธิ
+            }
+
+            // ตรวจสอบว่าราคาที่คำนวณได้ตรงกับราคาที่ส่งมาใน body หรือไม่
+            if (calculatedTotalPrice !== totalprice) {
+                return res.status(400).json({
+                    result: false,
+                    status: "error",
+                    msg: "จำนวนเงินทั้งหมดไม่ตรงกัน"
+                });
+            }
+
+            // สร้างบิลด้วยสถานะที่เหมาะสม
             await prisma.bill.create({
                 data: {
-                    totalprice: parseFloat(totalprice),
-                    itemdetail: parsedItemDetail,
-                    status,
-                    user: {
-                        connect: {
-                            id: req.users.id  // Ensure the user ID is available in req.users
-                        }
-                    }
+                    totalprice: calculatedTotalPrice,
+                    status: status,
+                    itemdetail: JSON.stringify(cartItems),
+                    users_id: req.users.id,
                 }
             });
+
+            // ลดจำนวนสินค้าในสต็อก
+            for (const item of cartItems) {
+                await prisma.storeitem.update({
+                    where: { id: item.storeItemId },
+                    data: { amount: { decrement: item.quantity } }
+                });
+            }
 
             return res.status(200).json({
                 result: true,
@@ -45,6 +83,7 @@ router.post('/:bill', isLogin(),
                 msg: "เพิ่มข้อมูลสำเร็จ"
             });
         } catch (error) {
+            console.error(error);
             return res.status(500).json({
                 result: false,
                 status: "error",
@@ -54,6 +93,9 @@ router.post('/:bill', isLogin(),
         }
     }
 );
+
+
+
 
 // Update bill
 router.put('/:bill/:id', isLogin(),

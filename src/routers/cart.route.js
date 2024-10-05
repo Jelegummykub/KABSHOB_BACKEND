@@ -81,7 +81,7 @@ router.post('/:itemId', isLogin(),
 
 //Update cart
 
-router.put('/:cart/:id', isLogin(),
+router.put('/:id', isLogin(),
     body('quantity').notEmpty().withMessage("กรุณากรอกจำนวน"),
     async (req, res) => {
         const result = validationResult(req).formatWith(({ msg }) => msg)

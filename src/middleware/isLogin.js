@@ -26,7 +26,7 @@ const isLogin = () => async(req,res,next) => {
             })
         }
         req.users = decode
-        // console.log("Decoded user:", decode)
+        console.log("Decoded user:", decode)
     })
         return next();
 }

@@ -118,22 +118,23 @@ router.post('/login',
 )
 
 
-router.get('/@me', isLogin(), (req, res) => {
-    return res.status(200).json({
-        result: true,
-        status: "success",
-        msg: "ข้อมูลผู้ใช้สำเร็จ",
-        user: {
-            id: req.users.id,
-            email: req.users.email,
-            name: req.users.name,
-            surname: req.users.surname,
-            tel: req.users.tel,
-            address: req.users.address,
-            role: req.users.role, // เพิ่มการส่ง role ที่นี่
-        }
+    router.get('/@me', isLogin(), (req, res) => {
+        console.log(req.users); 
+        return res.status(200).json({
+            result: true,
+            status: "success",
+            msg: "ข้อมูลผู้ใช้สำเร็จ",
+            user: {
+                id: req.users.id,
+                email: req.users.email,
+                name: req.users.name,
+                surname: req.users.surname,
+                tel: req.users.tel,
+                address: req.users.address,
+                role: req.users.role, // เพิ่มการส่ง role ที่นี่
+            }
+        });
     });
-});
 
 
 

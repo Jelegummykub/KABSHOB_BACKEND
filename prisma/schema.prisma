@@ -68,10 +68,11 @@ model bill {
 
 model stock {
   id          Int       @id @default(autoincrement())
-  billuser    bill      @relation(fields: [billId], references: [id])
-  billId      Int
+  billuser    bill?      @relation(fields: [billId], references: [id])
+  billId      Int?
   storeitem   Storeitem @relation(fields: [storeItemId], references: [id])
   storeItemId Int
+  quantity Int
   created_at  DateTime  @default(now())
   updated_at  DateTime  @updatedAt
 }
